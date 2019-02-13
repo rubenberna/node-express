@@ -7,11 +7,14 @@ const app = express();
 
 // 7. Connect to mongose
 mongoose.connect('mongodb://localhost/any-name', {
-  useNewUrlParser: true
+  useNewUrlParser: true // to avoid a weird warning
 })
 .then(() => console.log('MongoDB Connected...'))
 .catch(err => console.log(err));
 
+// 8. Load idea model
+require('./models/Idea');
+const Idea = mongoose.model('ideas');
 
 // 5. How middleware works. We created our own middleware
 app.use(function(req, res, next) {
@@ -39,7 +42,12 @@ app.get('/about', (req, res) => {
   res.render('about')
 })
 
-const port = 5000;
+// 9. Add Idea Form
+app.get('/ideas/add', (req, res) => {
+  res.render('ideas/add')
+})
+
+const port = process.env.PORT || 5000;
 
 //2. app listens to a port and uses a callback function
 app.listen(port, () => {
