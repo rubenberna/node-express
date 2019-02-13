@@ -1,5 +1,6 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
+const methodOverride = require('method-override')
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
@@ -28,6 +29,9 @@ app.use(function(req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+// 14. Method override middleware
+app.use(methodOverride('_method'));
+
 // 6. Handlebars Middleware
 app.engine('handlebars', exphbs({
   defaultLayout: 'main'
@@ -47,9 +51,33 @@ app.get('/about', (req, res) => {
   res.render('about')
 })
 
+// 11. Idea Index page
+app.get('/ideas', (req, res) => {
+  Idea.find({}) // get all ideas rom the model
+    .sort({date: 'desc'})
+    .then(ideas => { // pass the ideas to the render view
+      res.render('ideas/index', {
+        ideas: ideas
+      });
+    })
+})
+
 // 9. Add Idea Form
 app.get('/ideas/add', (req, res) => {
   res.render('ideas/add')
+})
+
+// 12. Edit Idea Form
+app.get('/ideas/edit/:id', (req, res) => {
+  Idea.findOne({
+    _id: req.params.id // it gets whatever is passed in the params id of the url
+  })
+  .then(idea => {
+    console.log(idea)
+    res.render('ideas/edit', {
+      idea: idea
+    })
+  })
 })
 
 // 10. Process Form
@@ -70,8 +98,41 @@ app.post('/ideas', (req, res) => {
       details: req.body.details
     })
   } else {
-    res.send('passed')
+    // pass to database
+    const newUser = {
+      title: req.body.title,
+      details: req.body.details
+    }
+    new Idea(newUser)
+      .save() // saves in database
+      .then(idea => {  // redirect to ideas
+        res.redirect('/ideas')
+      })
   }
+})
+
+// 13. Edit Form Process. It catches the method request in the html markup
+app.put('/ideas/:id', (req, res) => {
+  Idea.findOne({
+    _id: req.params.id
+  })
+  .then(idea => {
+    // new values
+    idea.title = req.body.title;
+    idea.details = req.body.details;
+    idea.save()
+      .then(idea => {
+        res.redirect('/ideas')
+      })
+  })
+})
+
+// 14. Delete idea
+app.delete('/ideas/:id', (req, res) => {
+  Idea.remove({_id: req.params.id})
+  .then(() => {
+    res.redirect('/ideas');
+  })
 })
 
 const port = process.env.PORT || 5000;
