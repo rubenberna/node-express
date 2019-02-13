@@ -1,5 +1,6 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 // 1. initialises the application
@@ -23,6 +24,10 @@ app.use(function(req, res, next) {
   next();
 });
 
+// 11. Body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
 // 6. Handlebars Middleware
 app.engine('handlebars', exphbs({
   defaultLayout: 'main'
@@ -45,6 +50,28 @@ app.get('/about', (req, res) => {
 // 9. Add Idea Form
 app.get('/ideas/add', (req, res) => {
   res.render('ideas/add')
+})
+
+// 10. Process Form
+app.post('/ideas', (req, res) => {
+  let errors = []
+  if(!req.body.title) { // we have access to req.body due to the bodyParser middleware
+    errors.push({text: 'Please add a title'})
+  }
+  if(!req.body.details) {
+    errors.push({text: 'Please add details'})
+  }
+
+  // if there's an error re-render the page with the errors and with whatever was submited in the form
+  if(errors.length > 0) {
+    res.render('ideas/add', {
+      errors: errors,
+      title: req.body.title,
+      details: req.body.details
+    })
+  } else {
+    res.send('passed')
+  }
 })
 
 const port = process.env.PORT || 5000;
