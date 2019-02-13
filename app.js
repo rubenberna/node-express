@@ -1,8 +1,17 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
+const mongoose = require('mongoose');
 
 // 1. initialises the application
 const app = express();
+
+// 7. Connect to mongose
+mongoose.connect('mongodb://localhost/any-name', {
+  useNewUrlParser: true
+})
+.then(() => console.log('MongoDB Connected...'))
+.catch(err => console.log(err));
+
 
 // 5. How middleware works. We created our own middleware
 app.use(function(req, res, next) {
