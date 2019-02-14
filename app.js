@@ -1,8 +1,11 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
-const methodOverride = require('method-override')
+const methodOverride = require('method-override');
+const flash = require('connect-flash');
+const session = require('express-session');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+
 
 // 1. initialises the application
 const app = express();
@@ -29,8 +32,26 @@ app.use(function(req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-// 14. Method override middleware
+// 13. Method override middleware
 app.use(methodOverride('_method'));
+
+// 16. Express session middleware
+app.use(session({
+  secret: 'secret', // it can be anything we want
+  resave: true, // changed to true
+  saveUninitialized: true,
+}));
+//
+// // 17. Flash middleware
+app.use(flash());
+//
+// 18. Setting up global variables middleware
+app.use(function (req, res, next) {
+  res.locals.success_msg = req.flash('success_msg');
+  res.locals.error_msg = req.flash('error_msg');
+  res.locals.error = req.flash('error');
+  next(); // next means we'll call the next piece of middleware
+})
 
 // 6. Handlebars Middleware
 app.engine('handlebars', exphbs({
@@ -106,12 +127,13 @@ app.post('/ideas', (req, res) => {
     new Idea(newUser)
       .save() // saves in database
       .then(idea => {  // redirect to ideas
+        req.flash('success_msg', 'Video idea created');
         res.redirect('/ideas')
       })
   }
 })
 
-// 13. Edit Form Process. It catches the method request in the html markup
+// 14. Edit Form Process. It catches the method request in the html markup
 app.put('/ideas/:id', (req, res) => {
   Idea.findOne({
     _id: req.params.id
@@ -122,15 +144,17 @@ app.put('/ideas/:id', (req, res) => {
     idea.details = req.body.details;
     idea.save()
       .then(idea => {
+        req.flash('success_msg', 'Video idea updated');
         res.redirect('/ideas')
       })
   })
 })
 
-// 14. Delete idea
+// 15. Delete idea
 app.delete('/ideas/:id', (req, res) => {
   Idea.remove({_id: req.params.id})
   .then(() => {
+    req.flash('success_msg', 'Video idea removed');
     res.redirect('/ideas');
   })
 })
