@@ -11,7 +11,7 @@ const Idea = mongoose.model('ideas');
 
 // 11. Idea Index page
 router.get('/', ensureAuthenticated, (req, res) => {
-  Idea.find({}) // get all ideas rom the model
+  Idea.find({user: req.user.id}) // only the ideas that are coming from the logged in user
     .sort({date: 'desc'})
     .then(ideas => { // pass the ideas to the render view
       res.render('ideas/index', {
@@ -31,10 +31,14 @@ router.get('/edit/:id', ensureAuthenticated, (req, res) => {
     _id: req.params.id // it gets whatever is passed in the params id of the url
   })
   .then(idea => {
-    console.log(idea)
-    res.render('ideas/edit', {
-      idea: idea
-    })
+    if(idea.user != req.user.id) {
+      req.flash('error_msg', 'Not authorised');
+      res.redirect('/ideas');
+    } else {
+      res.render('ideas/edit', {
+        idea: idea
+      })
+    }
   })
 })
 
@@ -59,7 +63,8 @@ router.post('/', ensureAuthenticated, (req, res) => {
     // pass to database
     const newUser = {
       title: req.body.title,
-      details: req.body.details
+      details: req.body.details,
+      user: req.user.id
     }
     new Idea(newUser)
       .save() // saves in database
