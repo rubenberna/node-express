@@ -18,6 +18,16 @@ router.get('/register', (req, res) => {
   res.render('users/register');
 })
 
+// Login Form Post -- Passport
+router.post('/login', (req, res, next) => {
+  // the first paramater is the strategy we're gonna use. We created that in the config file
+  passport.authenticate('local', {
+    successRedirect: '/ideas',
+    failureRedirect: '/users/login',
+    failureFlash: true
+  }) (req, res, next)
+});
+
 // Register form POST
 router.post('/register', (req, res) => {
   let errors = [];
@@ -58,7 +68,7 @@ router.post('/register', (req, res) => {
               newUser.save()
               .then(user => {
                 req.flash('success_msg', 'You are now registered and can login');
-                res.redirect('/users/register');
+                res.redirect('/');
               })
               .catch(err => {
                 console.log(err);
@@ -69,6 +79,13 @@ router.post('/register', (req, res) => {
         }
       })
   }
+})
+
+// Logout user
+router.get('/logout', (req, res) => {
+  req.logout();
+  req.flash('success_msg', 'You are logged out');
+  res.redirect('/users/login')
 })
 
 module.exports = router; // export the router

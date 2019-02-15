@@ -5,6 +5,7 @@ const methodOverride = require('method-override');
 const flash = require('connect-flash');
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const passport = require('passport');
 const mongoose = require('mongoose');
 
 
@@ -14,6 +15,9 @@ const app = express();
 // 20. Load routes
 const ideas = require('./routes/ideas');
 const users = require('./routes/users');
+
+// Passport Config
+require('./config/passport')(passport); // passing it in to that config file we created
 
 /* MONGOOSE */
 // 7. Connect to mongose
@@ -47,15 +51,20 @@ app.use(session({
   resave: true, // changed to true
   saveUninitialized: true,
 }));
-//
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
 // // 17. Flash middleware
 app.use(flash());
 //
-// 18. Setting up global variables middleware
+// 18. Setting global variables middleware
 app.use(function (req, res, next) {
   res.locals.success_msg = req.flash('success_msg');
   res.locals.error_msg = req.flash('error_msg');
   res.locals.error = req.flash('error');
+  res.locals.user = req.user || null;
   next(); // next means we'll call the next piece of middleware
 })
 
